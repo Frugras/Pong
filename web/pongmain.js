@@ -29,64 +29,109 @@ function main() {
     
     var topoff = 72;
     var bottomoff = 32;
-    var CANVAS_WIDTH = 800;
-    var CANVAS_HEIGHT = 600;
-    var padSpeed = 400;
-    var ballSpeed = 400
+
+    var gs = 3.2;
+    var c_scale = .5;
+    var CANVAS_WIDTH = 2560;
+    var CANVAS_HEIGHT = 1440;
+
+    // var gs = 1;
+    // var c_scale = 1;
+    // var CANVAS_WIDTH = 640;
+    // var CANVAS_HEIGHT = 480;
+
+    var padSpeed = CANVAS_WIDTH/2;
+    var ballSpeed = CANVAS_WIDTH/1.9;
+    
     var reset = 0;
     var aiSpeed = 2.2; // 1 = fast, 5 = slow, 0 = break
     var randOffset = 0;
 
-    var canvasThing = $("<canvas class='box' width='" + CANVAS_WIDTH + 
-        "' height='" + CANVAS_HEIGHT + "'></canvas>");
+    var canvasThing = $("<canvas class='box' width='" + CANVAS_WIDTH * c_scale + 
+        "' height='" + CANVAS_HEIGHT * c_scale + "'></canvas>");
     
     var canvasElement = canvasThing.get(0);
     
     canvasThing.appendTo('#canvascont');
     
     var canvas = canvasElement.getContext("2d");
+
+    // canvas.scale(0.5, 0.5);
+    canvas.scale(c_scale, c_scale);
     
-    var FPS = 300;
+    var FPS = 30;
 
     var scorx;
-    var imgWi = 32
-    
+    var imgWi = 32 * gs;
+
+
+    // function scx(x) {
+    //     return x * 1;
+    // };
+
+    // function scy(y) {
+    //     return y * 1;
+    // };   
+
     var imgStore = {
-        loadImages: function(){
-            var iconx = 20
-            var icony = 550
-            this.loadImage('img/i.png','i',iconx,icony);
-            this.loadImage('img/menu.png','menu',iconx,icony);
-            this.loadImage('img/menu.png','inMenu',3*iconx + 2*imgWi,icony);
-            this.loadImage('img/pause.png','pause',iconx,icony);
-            this.loadImage('img/play.png','play',iconx,icony);
-            this.loadImage('img/unmuted.png','unmuted',2*iconx + imgWi,icony);
-            this.loadImage('img/muted.png','muted',2*iconx + imgWi,icony);
-            this.loadImage('img/settings.png','settings',3*iconx + 2*imgWi,icony);
-            this.loadImage('img/reset.png','reset',4*iconx + 3*imgWi,icony);
-            this.loadImage('img/instructions.png','instructions', 50, 50);
-            this.loadImage('img/1player.png','1player', CANVAS_WIDTH/2-115, CANVAS_HEIGHT/2-130);
-            this.loadImage('img/2player.png','2player', CANVAS_WIDTH/2-115, CANVAS_HEIGHT/2+70);
-            
-           
+
+        loadImages: function() {
+
+            var iconx = 30 * gs;
+            var icony = CANVAS_HEIGHT - 30 * gs;
+            var that = this;
+            this.loadImage('img/default.png','default', iconx, icony, function (){
+                that.loadImage('img/i.png','i',iconx,icony);
+                that.loadImage('img/menu.png','menu',iconx,icony);
+                that.loadImage('img/menu.png','inMenu',3*iconx + 2*imgWi,icony);
+                that.loadImage('img/pause.png','pause',iconx,icony);
+                that.loadImage('img/play.png','play',iconx,icony);
+                that.loadImage('img/unmuted.png','unmuted',2*iconx + imgWi, icony);
+                that.loadImage('img/muted.png','muted',2*iconx + imgWi, icony);
+                that.loadImage('img/settings.png','settings',3*iconx + 2*imgWi, icony);
+                that.loadImage('img/reset.png','reset',4*iconx + 3*imgWi, icony);
+                that.loadImage('img/instructions.png','instructions', 50, 50);
+                that.loadImage('img/1player.png','1player', CANVAS_WIDTH/2-115, CANVAS_HEIGHT/2-130);
+                that.loadImage('img/2player.png','2player', CANVAS_WIDTH/2-115, CANVAS_HEIGHT/2+70);    
+            });            
         },
-        loadImage: function(src, name, x, y){
+
+        loadImage: function(src, name, x, y, cb) {
+            
             var img = new Image();
             img.src = src;
-            img.x = x;
-            img.y = y;
             img.clicked = false;
+
+            var defim = null;
+            if (imgStore['default']) {
+                defim = imgStore['default'].image
+            }
+
+            imgStore[name] = {name: name, x:x, y:y, image: defim};
+
             img.onload = function(){
-                imgStore[name] = img;
+                imgStore[name].image = img;
+                if (cb) {
+                    cb();    
+                }        
             };
         },
-        drawImage: function(name){
+
+        drawImage: function(name) {
             var imge = imgStore[name];
-            canvas.drawImage(imge, imge.x, imge.y) ;
+            if (imge) {
+                try {
+                    canvas.drawImage(imge.image, imge.x, imge.y);
+                }
+                catch (e) {
+                    console.error(e, imge.name);
+                }
+            }
         },
-        checkClick: function (x, y){
-            console.log("x: "+x);
-            console.log("y: "+y);
+
+        checkClick: function (x, y) {
+            console.log("x: " + x);
+            console.log("y: " + y);
             this.checkImageClick("i", x, y);
             this.checkImageClick("menu", x, y);
             this.checkImageClick("inMenu", x, y);
@@ -96,6 +141,7 @@ function main() {
             this.checkImageClick("reset", x, y);
             this.checkImageClick("instructions", x, y);
         },
+
         checkImageClick: function(name, x, y){
             var imge = imgStore[name];
             if ((x >= imge.x && x <= imge.x + imgWi) && (y >= imge.y && y <= imge.y + imgWi)){
@@ -104,8 +150,8 @@ function main() {
             }
         }   
     };
+
     imgStore.loadImages();
-        
     
     canvasElement.addEventListener("click",function(e){
         imgStore.checkClick(e.offsetX, e.offsetY);
@@ -117,16 +163,15 @@ function main() {
         }
     }
     
-    
     // a rect is one of the blocks that makes up a digit
     // each digit has an array called segments - which is just the list of these
     // rect's that make up that digit
     var rect = function() {
         this.color = "#fff";
-        this.x = 217;
-        this.y = 112;
-        this.wi = 32;
-        this.hi = 8;
+        this.x = 217*gs;
+        this.y = 112*gs;
+        this.wi = 32*gs;
+        this.hi = 8*gs;
 
         this.draw = function() {
             canvas.fillStyle = this.color;
@@ -159,24 +204,24 @@ function main() {
             segments[1].y = offy;
             segments[1].wi = newhi;
             segments[1].hi = newwi;
-            segments[2].x = offx+24;
+            segments[2].x = offx+24*gs;
             segments[2].y = offy;
             segments[2].wi = newhi;
             segments[2].hi = newwi;
             segments[3].x = offx;
-            segments[3].y = offy+28;
+            segments[3].y = offy+28*gs;
             segments[3].wi = newwi;
             segments[3].hi = newhi;
             segments[4].x = offx;
-            segments[4].y = offy+32;
+            segments[4].y = offy+32*gs;
             segments[4].wi = newhi;
             segments[4].hi = newwi;
-            segments[5].x = offx+24;
-            segments[5].y = offy+32;
+            segments[5].x = offx+24*gs;
+            segments[5].y = offy+32*gs;
             segments[5].wi = newhi;
             segments[5].hi = newwi;
             segments[6].x = offx;
-            segments[6].y = offy+56;
+            segments[6].y = offy+56*gs;
             segments[6].wi = newwi;
             segments[6].hi = newhi;
         }
@@ -212,9 +257,7 @@ function main() {
     };
   
   
-  
-  
-  
+
     // the score object contains a score variable that gets incremented on a point
     // a single score contains 2 digits
     score = function (doff) {
@@ -245,21 +288,21 @@ function main() {
         this.digit1 = new digit ();
         this.digit2 = new digit ();
         
-        this.digit1.off(92 + doff, 112, 32, 8);
-        this.digit2.off(doff, 112, 32, 8);        
+        this.digit1.off( 92*gs + doff, 32*gs, 32*gs, 8*gs);
+        this.digit2.off(doff, 32*gs, 32*gs, 8*gs);        
     }
     
     // make the two score objects
-    var score1 = new score(509);
-    var score2 = new score(125);
+    var score1 = new score(2*CANVAS_WIDTH/3 - 92*gs);
+    var score2 = new score(1*CANVAS_WIDTH/3 - 92*gs);
 
 // now the 2 player object literals 
-    var hi=64;
-    var wi=8;
+    var hi=64*gs;
+    var wi=8*gs;
     var player = {
         color: "#fff",
-        x: CANVAS_WIDTH-30-wi,
-        y: CANVAS_HEIGHT/2-(hi/2),
+        x: CANVAS_WIDTH - (30+wi)*gs,
+        y: CANVAS_HEIGHT/2- (hi/2)*gs,
         width: wi,
         height: hi,
         name: "one",
@@ -273,8 +316,8 @@ function main() {
     
     var player2 = {
         color: "#fff",
-        x: 30,
-        y: CANVAS_HEIGHT/2-(hi/2),
+        x: 30*gs,
+        y: CANVAS_HEIGHT/2 - (hi/2)*gs,
         width: wi,
         height: hi,
         name: "two",
@@ -286,16 +329,15 @@ function main() {
         
     };
 
-
     // the single ball object literal 
     var ball = {
         color: "#fff",
-        x: CANVAS_WIDTH/2-(4),
+        x: CANVAS_WIDTH/2 - 4*gs,
         y: 200,
         vx: 0,
         vy: 0,
-        width: 8,
-        height: 8,
+        width: 8*gs,
+        height: 8*gs,
         angle: 0,
         speed: 0,
         draw: function() {
@@ -777,8 +819,8 @@ function main() {
 
     function draw() {
         var n;
-        var linewidth = 4
-        var lineheight = 8
+        var linewidth = 4*gs;
+        var lineheight = 8*gs;
         canvas.fillStyle = "#000";
         canvas.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         for (n=0; n<31; n++) {
